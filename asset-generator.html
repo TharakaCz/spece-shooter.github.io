@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Asset Generator</title>
+</head>
+<body>
+    <h2>PNG Asset Generator for Space Shooter</h2>
+    <canvas id="assetCanvas" width="64" height="64" style="border: 1px solid black;"></canvas>
+    <br><br>
+    <button onclick="generatePlayer()">Generate Player Ship</button>
+    <button onclick="generateEnemy1()">Generate Enemy 1</button>
+    <button onclick="generateEnemy2()">Generate Enemy 2</button>
+    <button onclick="generateEnemy3()">Generate Enemy 3</button>
+    <button onclick="generateBullet()">Generate Bullet</button>
+    <button onclick="generatePowerup()">Generate Powerup</button>
+    <button onclick="generateMeteor()">Generate Meteor</button>
+    <br><br>
+    <div id="output"></div>
+
+    <script>
+        const canvas = document.getElementById('assetCanvas');
+        const ctx = canvas.getContext('2d');
+        const output = document.getElementById('output');
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, 64, 64);
+            ctx.fillStyle = 'transparent';
+            ctx.fillRect(0, 0, 64, 64);
+        }
+
+        function generatePlayer() {
+            clearCanvas();
+            // Green triangle spaceship with details
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.moveTo(32, 5);
+            ctx.lineTo(10, 55);
+            ctx.lineTo(32, 45);
+            ctx.lineTo(54, 55);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Engine exhaust
+            ctx.fillStyle = '#0088ff';
+            ctx.fillRect(28, 45, 8, 15);
+            
+            // Cockpit
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(32, 25, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            saveImage('player');
+        }
+
+        function generateEnemy1() {
+            clearCanvas();
+            // Red diamond with spikes
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.moveTo(32, 5);
+            ctx.lineTo(55, 32);
+            ctx.lineTo(32, 59);
+            ctx.lineTo(9, 32);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Add spikes
+            ctx.fillStyle = '#aa0000';
+            ctx.fillRect(30, 5, 4, 54);
+            ctx.fillRect(9, 30, 46, 4);
+            
+            saveImage('enemy1');
+        }
+
+        function generateEnemy2() {
+            clearCanvas();
+            // Orange hexagon with details
+            ctx.fillStyle = '#ff8800';
+            ctx.beginPath();
+            for(let i = 0; i < 6; i++) {
+                const angle = (i * Math.PI) / 3;
+                const x = 32 + Math.cos(angle) * 20;
+                const y = 32 + Math.sin(angle) * 20;
+                if(i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // Inner hexagon
+            ctx.fillStyle = '#ffaa44';
+            ctx.beginPath();
+            for(let i = 0; i < 6; i++) {
+                const angle = (i * Math.PI) / 3;
+                const x = 32 + Math.cos(angle) * 10;
+                const y = 32 + Math.sin(angle) * 10;
+                if(i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            saveImage('enemy2');
+        }
+
+        function generateEnemy3() {
+            clearCanvas();
+            // Purple star with glow
+            ctx.fillStyle = '#8800ff';
+            ctx.beginPath();
+            for(let i = 0; i < 10; i++) {
+                const angle = (i * Math.PI) / 5;
+                const radius = i % 2 === 0 ? 25 : 12;
+                const x = 32 + Math.cos(angle) * radius;
+                const y = 32 + Math.sin(angle) * radius;
+                if(i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // Center circle
+            ctx.fillStyle = '#aa44ff';
+            ctx.beginPath();
+            ctx.arc(32, 32, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            saveImage('enemy3');
+        }
+
+        function generateBullet() {
+            clearCanvas();
+            // Yellow bullet with trail
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(28, 10, 8, 44);
+            
+            // Bullet tip
+            ctx.beginPath();
+            ctx.moveTo(32, 10);
+            ctx.lineTo(28, 15);
+            ctx.lineTo(36, 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Trail effect
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillRect(30, 54, 4, 8);
+            
+            saveImage('bullet');
+        }
+
+        function generatePowerup() {
+            clearCanvas();
+            // Green health cross with glow
+            ctx.fillStyle = '#00ff88';
+            ctx.fillRect(20, 20, 24, 24);
+            
+            // White cross
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(28, 16, 8, 32);
+            ctx.fillRect(16, 28, 32, 8);
+            
+            // Border
+            ctx.strokeStyle = '#00aa66';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(20, 20, 24, 24);
+            
+            saveImage('powerup');
+        }
+
+        function generateMeteor() {
+            clearCanvas();
+            // Gray/brown meteor with rough surface
+            ctx.fillStyle = '#666666';
+            ctx.beginPath();
+            ctx.arc(32, 32, 22, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add surface details and craters
+            ctx.fillStyle = '#444444';
+            ctx.beginPath();
+            ctx.arc(25, 25, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(40, 35, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(35, 20, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(20, 40, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add rough edges
+            ctx.fillStyle = '#555555';
+            ctx.fillRect(10, 30, 6, 3);
+            ctx.fillRect(48, 25, 4, 4);
+            ctx.fillRect(30, 10, 3, 5);
+            
+            saveImage('meteor');
+        }
+
+        function saveImage(name) {
+            const dataURL = canvas.toDataURL('image/png');
+            output.innerHTML += `<h3>${name}.png</h3>`;
+            output.innerHTML += `<img src="${dataURL}" style="image-rendering: pixelated; width: 128px; height: 128px; border: 1px solid #ccc;">`;
+            output.innerHTML += `<br><a href="${dataURL}" download="${name}.png">Download ${name}.png</a><br><br>`;
+        }
+    </script>
+</body>
+</html>

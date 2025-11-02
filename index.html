@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Shooter Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="player-info">
+                <div class="player-name">Pilot: <span id="playerName">Unknown</span></div>
+                <div class="difficulty">Difficulty: <span id="difficultyDisplay">Normal</span></div>
+            </div>
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="level-info">Level: <span id="level">1</span></div>
+            <div class="lives">
+                <span class="heart" id="heart1">❤️</span>
+                <span class="heart" id="heart2">❤️</span>
+                <span class="heart" id="heart3">❤️</span>
+            </div>
+            <button id="soundToggle" class="sound-btn sound-on" onclick="toggleSound()">🔊 Sound: ON</button>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="game-overlay" id="gameOverlay">
+            <div class="menu" id="nameInputMenu">
+                <h1>🚀 Space Command</h1>
+                <p>Enter your pilot name:</p>
+                <input type="text" id="playerNameInput" placeholder="Enter pilot name" maxlength="15">
+                <button onclick="showDifficultySelect()">Continue</button>
+            </div>
+            
+            <div class="menu" id="difficultyMenu" style="display: none;">
+                <h1>🎯 Select Difficulty</h1>
+                <div class="difficulty-options">
+                    <button class="difficulty-btn easy" onclick="setDifficulty('easy')">
+                        <strong>EASY</strong><br>
+                        <small>Slower enemies, more health</small>
+                    </button>
+                    <button class="difficulty-btn normal" onclick="setDifficulty('normal')">
+                        <strong>NORMAL</strong><br>
+                        <small>Balanced gameplay</small>
+                    </button>
+                    <button class="difficulty-btn hard" onclick="setDifficulty('hard')">
+                        <strong>HARD</strong><br>
+                        <small>Faster enemies, less health</small>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="menu" id="startMenu" style="display: none;">
+                <h1>🚀 Space Shooter</h1>
+                <p>Realistic Space Combat!</p>
+                <p><strong>5 Levels with Epic Boss Battles!</strong></p>
+                <div class="pilot-info">
+                    <p>Pilot: <span id="displayName">Unknown</span></p>
+                    <p>Difficulty: <span id="displayDifficulty">Normal</span></p>
+                </div>
+                <p>Use WASD or Arrow Keys to move</p>
+                <p>Press SPACE to shoot</p>
+                <button onclick="startGame()">Launch Mission</button>
+                <button onclick="showNameInput()" class="secondary-btn">Change Settings</button>
+            </div>
+            
+            <div class="menu" id="gameOverMenu" style="display: none;">
+                <h1>Game Over!</h1>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <button onclick="restartGame()">Play Again</button>
+            </div>
+            
+            <div class="menu" id="pauseMenu" style="display: none;">
+                <h1>Game Paused</h1>
+                <p>Press P to continue</p>
+                <button onclick="resumeGame()">Resume</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <p><strong>Controls:</strong></p>
+            <p>WASD or Arrow Keys - Move</p>
+            <p>SPACE - Shoot</p>
+            <p>P - Pause</p>
+            <p><strong>Goal:</strong> Defeat 10 enemies per level to face the boss!</p>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>

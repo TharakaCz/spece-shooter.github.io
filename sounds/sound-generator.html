@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Sound Files for Space Shooter</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .sound-generator { margin: 20px 0; padding: 15px; border: 1px solid #444; border-radius: 8px; }
+        button { background: #00ff00; color: black; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #00aa00; }
+        audio { width: 100%; margin: 10px 0; }
+        .download-link { color: #00aaff; text-decoration: none; margin: 10px; }
+        .download-link:hover { color: #00ffff; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Space Shooter Sound Generator</h1>
+    <p>Click the buttons below to generate and download sound effects for your space shooter game!</p>
+    
+    <div class="sound-generator">
+        <h3>Player Shoot Sound</h3>
+        <button onclick="generatePlayerShoot()">Generate Player Shoot</button>
+        <audio id="playerShootAudio" controls style="display:none;"></audio>
+        <a id="playerShootDownload" class="download-link" style="display:none;">Download player-shoot.wav</a>
+    </div>
+    
+    <div class="sound-generator">
+        <h3>Enemy Shoot Sound</h3>
+        <button onclick="generateEnemyShoot()">Generate Enemy Shoot</button>
+        <audio id="enemyShootAudio" controls style="display:none;"></audio>
+        <a id="enemyShootDownload" class="download-link" style="display:none;">Download enemy-shoot.wav</a>
+    </div>
+    
+    <div class="sound-generator">
+        <h3>Explosion Sound</h3>
+        <button onclick="generateExplosion()">Generate Explosion</button>
+        <audio id="explosionAudio" controls style="display:none;"></audio>
+        <a id="explosionDownload" class="download-link" style="display:none;">Download enemy-destroy.wav</a>
+    </div>
+    
+    <div class="sound-generator">
+        <h3>Power-up Sound</h3>
+        <button onclick="generatePowerUp()">Generate Power-up</button>
+        <audio id="powerupAudio" controls style="display:none;"></audio>
+        <a id="powerupDownload" class="download-link" style="display:none;">Download powerup.wav</a>
+    </div>
+    
+    <div class="sound-generator">
+        <h3>Background Music</h3>
+        <button onclick="generateMusic()">Generate Menu Music</button>
+        <audio id="musicAudio" controls style="display:none;"></audio>
+        <a id="musicDownload" class="download-link" style="display:none;">Download menu-music.wav</a>
+    </div>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Click each "Generate" button to create sound effects</li>
+        <li>Listen to the generated sound using the audio player</li>
+        <li>Click the download link to save the file</li>
+        <li>Place the downloaded files in your game's /sounds/ folder</li>
+        <li>Make sure the filenames match exactly!</li>
+    </ol>
+    
+    <h2>Alternative Sources:</h2>
+    <ul>
+        <li><a href="https://sfxr.me/" target="_blank">SFXR - Online Sound Generator</a></li>
+        <li><a href="https://opengameart.org/" target="_blank">OpenGameArt - Free Sounds</a></li>
+        <li><a href="https://freesound.org/" target="_blank">Freesound - Community Sounds</a></li>
+    </ul>
+
+    <script>
+        // Web Audio API for generating simple sound effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function generateTone(frequency, duration, type = 'sine', volume = 0.3) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+            
+            return { oscillator, gainNode };
+        }
+        
+        function createDownloadLink(audioBuffer, filename, elementId) {
+            // Convert AudioBuffer to WAV and create download link
+            const wav = audioBufferToWav(audioBuffer);
+            const blob = new Blob([wav], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.getElementById(elementId);
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'inline';
+            
+            // Also create audio element for preview
+            const audioId = elementId.replace('Download', 'Audio');
+            const audio = document.getElementById(audioId);
+            audio.src = url;
+            audio.style.display = 'block';
+        }
+        
+        function generatePlayerShoot() {
+            const duration = 0.1;
+            const sampleRate = audioContext.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const freq = 800 - (t * 600); // Descending frequency
+                data[i] = Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 10) * 0.3;
+            }
+            
+            createDownloadLink(buffer, 'player-shoot.wav', 'playerShootDownload');
+        }
+        
+        function generateEnemyShoot() {
+            const duration = 0.15;
+            const sampleRate = audioContext.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const freq = 200 + Math.sin(t * 50) * 50; // Lower, modulated frequency
+                data[i] = Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 5) * 0.4;
+            }
+            
+            createDownloadLink(buffer, 'enemy-shoot.wav', 'enemyShootDownload');
+        }
+        
+        function generateExplosion() {
+            const duration = 0.5;
+            const sampleRate = audioContext.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const noise = (Math.random() - 0.5) * 2;
+                const envelope = Math.exp(-t * 4);
+                data[i] = noise * envelope * 0.3;
+            }
+            
+            createDownloadLink(buffer, 'enemy-destroy.wav', 'explosionDownload');
+        }
+        
+        function generatePowerUp() {
+            const duration = 0.3;
+            const sampleRate = audioContext.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const freq = 440 + (t * 880); // Ascending frequency
+                data[i] = Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 3) * 0.3;
+            }
+            
+            createDownloadLink(buffer, 'powerup.wav', 'powerupDownload');
+        }
+        
+        function generateMusic() {
+            const duration = 2.0; // Short sample
+            const sampleRate = audioContext.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, length, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < length; i++) {
+                const t = i / sampleRate;
+                const note1 = Math.sin(2 * Math.PI * 220 * t); // A3
+                const note2 = Math.sin(2 * Math.PI * 330 * t); // E4
+                const note3 = Math.sin(2 * Math.PI * 440 * t); // A4
+                data[i] = (note1 + note2 + note3) * 0.1 * Math.sin(t * 2); // Slow amplitude modulation
+            }
+            
+            createDownloadLink(buffer, 'menu-music.wav', 'musicDownload');
+        }
+        
+        // Function to convert AudioBuffer to WAV format
+        function audioBufferToWav(buffer) {
+            const length = buffer.length;
+            const sampleRate = buffer.sampleRate;
+            const arrayBuffer = new ArrayBuffer(44 + length * 2);
+            const view = new DataView(arrayBuffer);
+            
+            // WAV header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, length * 2, true);
+            
+            // Audio data
+            const channelData = buffer.getChannelData(0);
+            let offset = 44;
+            for (let i = 0; i < length; i++) {
+                const sample = Math.max(-1, Math.min(1, channelData[i]));
+                view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                offset += 2;
+            }
+            
+            return arrayBuffer;
+        }
+        
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+    </script>
+</body>
+</html>

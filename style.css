@@ -360,3 +360,135 @@ body {
 .splash #gameCanvas:hover {
     transform: scale(1.01);
 }
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        background: #000;
+    }
+    
+    .game-container {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.8);
+    }
+    
+    #gameCanvas {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+    }
+    
+    .controls {
+        flex-direction: column;
+        gap: 10px;
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+    
+    .ui-display {
+        font-size: 14px;
+        padding: 8px;
+    }
+    
+    .sound-btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    /* Hide desktop-specific elements on mobile */
+    .desktop-only {
+        display: none;
+    }
+    
+    /* Overlay adjustments for mobile */
+    .overlay {
+        padding: 20px;
+    }
+    
+    .overlay h1 {
+        font-size: 28px;
+    }
+    
+    .overlay h2 {
+        font-size: 22px;
+    }
+    
+    .overlay button {
+        padding: 12px 24px;
+        font-size: 16px;
+        margin: 8px;
+    }
+    
+    .overlay input {
+        padding: 12px;
+        font-size: 16px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+/* Mobile device specific */
+.mobile body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+.mobile #gameCanvas {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Prevent text selection on mobile */
+.mobile * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Virtual controls visibility */
+.mobile .virtual-controls {
+    display: block;
+}
+
+.virtual-controls {
+    display: none;
+}
+
+/* Landscape orientation adjustments */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    .game-container {
+        padding: 5px;
+    }
+    
+    .controls {
+        top: 5px;
+        right: 5px;
+    }
+    
+    .ui-display {
+        font-size: 12px;
+        padding: 6px;
+    }
+}
+
+/* Touch feedback */
+@media (pointer: coarse) {
+    button:active {
+        transform: scale(0.95);
+    }
+    
+    .overlay button:active {
+        background: rgba(0, 255, 136, 0.8);
+    }
+}

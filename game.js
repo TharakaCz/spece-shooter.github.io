@@ -168,6 +168,25 @@ let boss = null;
 const keys = {};
 const mouse = { x: 0, y: 0, clicked: false };
 
+// Mobile Touch Controls
+const touch = {
+    active: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    deltaX: 0,
+    deltaY: 0,
+    shooting: false,
+    lastShoot: 0
+};
+
+let isMobile = false;
+let virtualControls = {
+    joystick: { x: 100, y: canvas.height - 150, radius: 60, knobRadius: 25 },
+    shootButton: { x: canvas.width - 100, y: canvas.height - 100, radius: 50 }
+};
+
 // Game Settings
 const GAME_SETTINGS = {
     PLAYER_SPEED: 5,
@@ -579,7 +598,13 @@ function updateSplashScreen() {
         ctx.fillText('ULTIMATE EDITION', canvas.width / 2, canvas.height / 2 - 40);
         
         // Features list with fade-in effect
-        const features = [
+        const features = isMobile ? [
+            '📱 Touch Controls Optimized',
+            '🕹️ Virtual Joystick Movement', 
+            '🔫 Tap to Shoot Button',
+            '🚀 Epic Mobile Gaming',
+            '💎 Touch-Friendly Interface'
+        ] : [
             '⚡ Enhanced Firepower System',
             '🛡️ Bullet-on-Bullet Combat',
             '🎵 Dynamic Sound System',
@@ -614,7 +639,8 @@ function updateSplashScreen() {
                 ctx.fillStyle = '#ffff00';
                 ctx.font = 'bold 18px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText('PRESS ANY KEY TO CONTINUE', canvas.width / 2, canvas.height - 60);
+                const continueText = isMobile ? 'TAP ANYWHERE TO CONTINUE' : 'PRESS ANY KEY TO CONTINUE';
+                ctx.fillText(continueText, canvas.width / 2, canvas.height - 60);
             }
         }
         
@@ -737,6 +763,39 @@ function createStars() {
     }
 }
 
+// Mobile Detection and Setup
+function detectMobile() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    isMobile = /android|blackberry|iemobile|ipad|iphone|ipod|opera mini|webos/i.test(userAgent.toLowerCase()) || 
+               'ontouchstart' in window || 
+               navigator.maxTouchPoints > 0;
+    
+    if (isMobile) {
+        // Update virtual controls based on actual canvas size
+        updateVirtualControlsPosition();
+        document.body.classList.add('mobile');
+    }
+    
+    return isMobile;
+}
+
+function updateVirtualControlsPosition() {
+    const rect = canvas.getBoundingClientRect();
+    virtualControls = {
+        joystick: { 
+            x: 100 * (canvas.width / 800), 
+            y: canvas.height - 150 * (canvas.height / 600), 
+            radius: 60 * Math.min(canvas.width / 800, canvas.height / 600), 
+            knobRadius: 25 * Math.min(canvas.width / 800, canvas.height / 600)
+        },
+        shootButton: { 
+            x: canvas.width - 100 * (canvas.width / 800), 
+            y: canvas.height - 100 * (canvas.height / 600), 
+            radius: 50 * Math.min(canvas.width / 800, canvas.height / 600)
+        }
+    };
+}
+
 // Event Listeners
 document.addEventListener('keydown', (e) => {
     keys[e.code] = true;
@@ -788,6 +847,106 @@ canvas.addEventListener('click', (e) => {
     }
     setTimeout(() => mouse.clicked = false, 100);
 });
+
+// Touch Event Listeners for Mobile
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    
+    // Skip splash screen on touch
+    if (gameState === 'splash') {
+        showNameInputMenu();
+        return;
+    }
+    
+    if (gameState !== 'playing') return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const touches = e.touches;
+    
+    for (let i = 0; i < touches.length; i++) {
+        const touchX = (touches[i].clientX - rect.left) * (canvas.width / rect.width);
+        const touchY = (touches[i].clientY - rect.top) * (canvas.height / rect.height);
+        
+        // Check if touching shoot button
+        const shootButtonDist = Math.sqrt(
+            Math.pow(touchX - virtualControls.shootButton.x, 2) + 
+            Math.pow(touchY - virtualControls.shootButton.y, 2)
+        );
+        
+        if (shootButtonDist <= virtualControls.shootButton.radius) {
+            touch.shooting = true;
+            shoot();
+            // Add haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+        
+        // Check if touching joystick area
+        const joystickDist = Math.sqrt(
+            Math.pow(touchX - virtualControls.joystick.x, 2) + 
+            Math.pow(touchY - virtualControls.joystick.y, 2)
+        );
+        
+        if (joystickDist <= virtualControls.joystick.radius) {
+            touch.active = true;
+            touch.startX = touchX;
+            touch.startY = touchY;
+            touch.currentX = touchX;
+            touch.currentY = touchY;
+        }
+    }
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    
+    if (gameState !== 'playing' || !touch.active) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+    const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Update touch position
+    touch.currentX = touchX;
+    touch.currentY = touchY;
+    
+    // Calculate delta for movement
+    touch.deltaX = touch.currentX - touch.startX;
+    touch.deltaY = touch.currentY - touch.startY;
+    
+    // Limit movement within joystick radius
+    const distance = Math.sqrt(touch.deltaX * touch.deltaX + touch.deltaY * touch.deltaY);
+    if (distance > virtualControls.joystick.radius) {
+        const angle = Math.atan2(touch.deltaY, touch.deltaX);
+        touch.deltaX = Math.cos(angle) * virtualControls.joystick.radius;
+        touch.deltaY = Math.sin(angle) * virtualControls.joystick.radius;
+    }
+});
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 0) {
+        touch.active = false;
+        touch.shooting = false;
+        touch.deltaX = 0;
+        touch.deltaY = 0;
+    }
+});
+
+// Prevent default touch behaviors
+document.addEventListener('touchstart', (e) => {
+    if (e.target === canvas) e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchmove', (e) => {
+    if (e.target === canvas) e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchend', (e) => {
+    if (e.target === canvas) e.preventDefault();
+}, { passive: false });
 
 // Game Functions
 function startGame() {
@@ -856,7 +1015,7 @@ function updatePlayer() {
         }
     }
 
-    // Movement with WASD or Arrow Keys
+    // Movement with WASD or Arrow Keys (Desktop)
     if ((keys['KeyW'] || keys['ArrowUp']) && player.y > 0) {
         player.y -= player.speed;
     }
@@ -868,6 +1027,30 @@ function updatePlayer() {
     }
     if ((keys['KeyD'] || keys['ArrowRight']) && player.x < canvas.width - player.width) {
         player.x += player.speed;
+    }
+    
+    // Touch Movement (Mobile)
+    if (isMobile && touch.active) {
+        const sensitivity = 0.1; // Adjust sensitivity
+        const moveX = touch.deltaX * sensitivity;
+        const moveY = touch.deltaY * sensitivity;
+        
+        // Apply movement
+        player.x += moveX;
+        player.y += moveY;
+        
+        // Keep player within screen bounds
+        player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+    }
+    
+    // Auto-shooting for mobile when shoot button is held
+    if (isMobile && touch.shooting) {
+        const now = Date.now();
+        if (now - touch.lastShoot > 150) { // Limit fire rate on mobile
+            shoot();
+            touch.lastShoot = now;
+        }
     }
 }
 
@@ -2457,6 +2640,65 @@ function drawStars() {
     }
 }
 
+// Virtual Controls for Mobile
+function drawVirtualControls() {
+    if (!isMobile || gameState !== 'playing') return;
+    
+    ctx.save();
+    
+    // Draw joystick
+    ctx.globalAlpha = 0.6;
+    
+    // Joystick base
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(virtualControls.joystick.x, virtualControls.joystick.y, virtualControls.joystick.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Joystick knob
+    let knobX = virtualControls.joystick.x;
+    let knobY = virtualControls.joystick.y;
+    
+    if (touch.active) {
+        knobX = virtualControls.joystick.x + touch.deltaX;
+        knobY = virtualControls.joystick.y + touch.deltaY;
+    }
+    
+    ctx.fillStyle = 'rgba(0, 255, 136, 0.8)';
+    ctx.strokeStyle = '#00ff88';
+    ctx.beginPath();
+    ctx.arc(knobX, knobY, virtualControls.joystick.knobRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Draw shoot button
+    ctx.fillStyle = touch.shooting ? 'rgba(255, 0, 0, 0.5)' : 'rgba(255, 255, 0, 0.3)';
+    ctx.strokeStyle = touch.shooting ? '#ff0000' : '#ffff00';
+    ctx.beginPath();
+    ctx.arc(virtualControls.shootButton.x, virtualControls.shootButton.y, virtualControls.shootButton.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Shoot button icon
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔫', virtualControls.shootButton.x, virtualControls.shootButton.y);
+    
+    // Movement arrows on joystick
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('↕', virtualControls.joystick.x, virtualControls.joystick.y - 5);
+    ctx.fillText('↔', virtualControls.joystick.x, virtualControls.joystick.y + 8);
+    
+    ctx.restore();
+}
+
 function render() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2482,6 +2724,9 @@ function render() {
     drawBoss();
     drawPowerUps();
     drawParticles();
+    
+    // Draw virtual controls for mobile
+    drawVirtualControls();
     
     // Draw level and progress info
     ctx.fillStyle = '#ffffff';
@@ -2551,6 +2796,11 @@ function gameLoop() {
 // Initialize the game when page loads
 window.addEventListener('load', () => {
     gameState = 'loading';
+    
+    // Detect mobile and setup responsive canvas
+    detectMobile();
+    setupResponsiveCanvas();
+    
     loadImages();
     createStars();
     updateUI();
@@ -2564,3 +2814,46 @@ window.addEventListener('load', () => {
     document.getElementById('gameOverMenu').style.display = 'none';
     document.getElementById('pauseMenu').style.display = 'none';
 });
+
+// Responsive Canvas Setup
+function setupResponsiveCanvas() {
+    function resizeCanvas() {
+        const container = canvas.parentElement;
+        const containerRect = container.getBoundingClientRect();
+        
+        if (isMobile) {
+            // For mobile, make canvas responsive to screen size
+            const maxWidth = window.innerWidth - 20;
+            const maxHeight = window.innerHeight - 100; // Leave space for UI
+            
+            const aspectRatio = 800 / 600; // Original aspect ratio
+            
+            let newWidth = maxWidth;
+            let newHeight = newWidth / aspectRatio;
+            
+            if (newHeight > maxHeight) {
+                newHeight = maxHeight;
+                newWidth = newHeight * aspectRatio;
+            }
+            
+            canvas.style.width = newWidth + 'px';
+            canvas.style.height = newHeight + 'px';
+            
+            // Update virtual controls position
+            updateVirtualControlsPosition();
+        } else {
+            // Keep original size for desktop
+            canvas.style.width = '800px';
+            canvas.style.height = '600px';
+        }
+    }
+    
+    // Initial resize
+    resizeCanvas();
+    
+    // Listen for orientation changes and resize events
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(resizeCanvas, 100); // Delay to ensure orientation change is complete
+    });
+}
